@@ -182,15 +182,28 @@ class ApiService {
     });
   }
 
-  // --- Goals ---
-  async getGoals() {
-    return this.request('/goals');
+  // --- Buckets ---
+  async getBuckets() {
+    return this.request('/buckets');
   }
 
-  async createGoal(data) {
-    return this.request('/goals', {
+  async createBucket(data) {
+    return this.request('/buckets', {
       method: 'POST',
       body: data
+    });
+  }
+  
+  async updateBucket(id, data) {
+    return this.request(`/buckets/${id}`, {
+      method: 'PUT',
+      body: data
+    });
+  }
+  
+  async deleteBucket(id) {
+    return this.request(`/buckets/${id}`, {
+      method: 'DELETE'
     });
   }
 }

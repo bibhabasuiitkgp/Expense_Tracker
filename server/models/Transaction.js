@@ -26,6 +26,10 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  bucket: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Bucket'
+  },
   paymentMethod: {
     type: String,
     enum: ['Cash', 'Credit Card', 'Debit Card', 'UPI', 'Net Banking'],

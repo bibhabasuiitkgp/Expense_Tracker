@@ -47,7 +47,7 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/budgets', require('./routes/budgets'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/investments', require('./routes/investments'));
-app.use('/api/goals', require('./routes/goals'));
+app.use('/api/buckets', require('./routes/buckets'));
 app.use('/api', require('./routes/importExport'));
 
 // SPA fallback — serve index.html for non-API routes

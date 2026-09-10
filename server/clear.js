@@ -5,7 +5,7 @@ const Category = require('./models/Category');
 const Transaction = require('./models/Transaction');
 const Budget = require('./models/Budget');
 const Investment = require('./models/Investment');
-const Goal = require('./models/Goal');
+const Bucket = require('./models/Bucket');
 
 async function clearDB() {
   try {
@@ -27,7 +27,7 @@ async function clearDB() {
           Transaction.deleteMany({}),
           Budget.deleteMany({}),
           Investment.deleteMany({}),
-          Goal.deleteMany({})
+          Bucket.deleteMany({})
         ]);
         console.log('✅ Database is now completely empty.');
       } else {

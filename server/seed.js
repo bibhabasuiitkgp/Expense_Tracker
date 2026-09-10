@@ -5,6 +5,7 @@ const Category = require('./models/Category');
 const Transaction = require('./models/Transaction');
 const Budget = require('./models/Budget');
 const Investment = require('./models/Investment');
+const Bucket = require('./models/Bucket');
 
 async function seed() {
   try {
@@ -18,7 +19,8 @@ async function seed() {
       Category.deleteMany({}),
       Transaction.deleteMany({}),
       Budget.deleteMany({}),
-      Investment.deleteMany({})
+      Investment.deleteMany({}),
+      Bucket.deleteMany({})
     ]);
     console.log('🗑️  Cleared existing data');
 

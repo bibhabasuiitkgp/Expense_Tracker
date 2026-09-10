@@ -329,6 +329,7 @@ class TransactionsModule {
       if (prefill.category) {
         this.selectCategory(prefill.category);
       }
+      document.getElementById('txn-bucket').value = '';
     }
 
     // Add delete button if missing but hide it
@@ -361,6 +362,8 @@ class TransactionsModule {
     document.getElementById('txn-description').value = t.description;
     this.selectCategory(t.category);
     
+    document.getElementById('txn-bucket').value = t.bucket || '';
+    
     this.currentTags = [...(t.tags || [])];
     this.renderTags();
 
@@ -376,12 +379,14 @@ class TransactionsModule {
     const id = document.getElementById('txn-id').value;
     const catHidden = document.getElementById('txn-category').value;
     const catInput = document.getElementById('txn-category-input').value;
+    const bucket = document.getElementById('txn-bucket').value;
     
     const data = {
       date: document.getElementById('txn-date').value,
       amount: parseFloat(document.getElementById('txn-amount').value),
       type: document.getElementById('txn-type').value,
       category: catHidden || catInput, // fallback if they just typed it
+      bucket: bucket || null,
       paymentMethod: document.getElementById('txn-payment').value,
       description: document.getElementById('txn-description').value,
       tags: this.currentTags
@@ -445,6 +450,15 @@ class TransactionsModule {
       window.app.showToast(err.message, 'danger');
       this.loadData(true); // reload to fix UI state
     }
+  }
+
+  updateBucketOptions(buckets) {
+    const select = document.getElementById('txn-bucket');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">None</option>' + buckets.map(b => 
+      `<option value="${b._id}">${b.icon} ${b.name}</option>`
+    ).join('');
   }
 }
 

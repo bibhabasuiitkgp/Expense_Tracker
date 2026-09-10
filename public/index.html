@@ -282,14 +282,14 @@
         </div>
       </section>
 
-      <!-- ── Goals Page ── -->
-      <section id="page-goals" class="page-section">
+      <!-- ── Buckets Page ── -->
+      <section id="page-buckets" class="page-section">
         <div class="section-header">
-          <h1 class="section-title">Goals</h1>
-          <button class="btn btn--primary btn--sm" id="add-goal-btn">+ Add Goal</button>
+          <h1 class="section-title">Buckets</h1>
+          <button class="btn btn--primary btn--sm" id="add-bucket-btn">+ Add Bucket</button>
         </div>
 
-        <div id="goals-list"></div>
+        <div id="buckets-list"></div>
       </section>
     </main>
 
@@ -311,9 +311,9 @@
         <span class="bottom-nav__icon">📈</span>
         <span class="bottom-nav__label">Invest</span>
       </button>
-      <button class="bottom-nav__item" data-page="goals" id="nav-goals">
-        <span class="bottom-nav__icon">🏆</span>
-        <span class="bottom-nav__label">Goals</span>
+      <button class="bottom-nav__item" data-page="buckets" id="nav-buckets">
+        <span class="bottom-nav__icon">🪣</span>
+        <span class="bottom-nav__label">Buckets</span>
       </button>
     </nav>
 
@@ -370,6 +370,13 @@
             <input type="hidden" id="txn-category">
             <div class="dropdown__menu" id="category-dropdown"></div>
           </div>
+        </div>
+        
+        <div class="form-group" id="txn-bucket-group">
+          <label for="txn-bucket" class="form-label">Bucket (Optional)</label>
+          <select id="txn-bucket" class="form-select">
+            <option value="">None</option>
+          </select>
         </div>
 
         <div class="form-group">
@@ -469,36 +476,30 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- GOAL MODAL                                 -->
+  <!-- BUCKET MODAL                               -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="modal-overlay" id="goal-modal">
+  <div class="modal-overlay" id="bucket-modal">
     <div class="modal">
       <div class="modal__handle"></div>
-      <h2 class="modal__title">Add Goal</h2>
+      <h2 class="modal__title" id="bucket-modal-title">Create Bucket</h2>
 
-      <form id="goal-form">
-        <input type="hidden" id="goal-id">
+      <form id="bucket-system-form">
+        <input type="hidden" id="bucket-id">
         <div class="form-group">
-          <label for="goal-name" class="form-label">Goal Name</label>
-          <input type="text" id="goal-name" class="form-input" placeholder="e.g. Emergency Fund" required>
+          <label for="bucket-name" class="form-label">Bucket Name</label>
+          <input type="text" id="bucket-name" class="form-input" placeholder="e.g. GF Expenses" required>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="goal-target" class="form-label">Target Amount (₹)</label>
-            <input type="number" id="goal-target" class="form-input" placeholder="0" min="1" required inputmode="numeric">
+            <label for="bucket-target" class="form-label">Target Amount (₹)</label>
+            <input type="number" id="bucket-target" class="form-input" placeholder="0" min="1" required inputmode="numeric">
           </div>
           <div class="form-group">
-            <label for="goal-date" class="form-label">Target Date</label>
-            <input type="date" id="goal-date" class="form-input" required>
+            <label for="bucket-icon" class="form-label">Icon (Emoji)</label>
+            <input type="text" id="bucket-icon" class="form-input" placeholder="🪣" maxlength="2">
           </div>
         </div>
-        <div class="form-group">
-          <label for="goal-linked-category" class="form-label">Linked Category (optional)</label>
-          <select id="goal-linked-category" class="form-select">
-            <option value="">None</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn--primary btn--full">Save Goal</button>
+        <button type="submit" class="btn btn--primary btn--full">Save Bucket</button>
       </form>
     </div>
   </div>
@@ -532,7 +533,7 @@
   <script src="/js/transactions.js"></script>
   <script src="/js/budgets.js"></script>
   <script src="/js/investments.js"></script>
-  <script src="/js/goals.js"></script>
+  <script src="/js/buckets.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

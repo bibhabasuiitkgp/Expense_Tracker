@@ -17,7 +17,7 @@ class App {
       transactions: document.getElementById('page-transactions'),
       budgets: document.getElementById('page-budgets'),
       investments: document.getElementById('page-investments'),
-      goals: document.getElementById('page-goals')
+      buckets: document.getElementById('page-buckets')
     };
 
     this.navItems = document.querySelectorAll('.bottom-nav__item');
@@ -67,7 +67,7 @@ class App {
       window.transactionsModule.init();
       window.budgetsModule.init();
       window.investmentsModule.init();
-      window.goalsModule.init();
+      window.bucketsModule.init();
 
     } catch (e) {
       this.showToast('Failed to load initial data', 'danger');
@@ -206,7 +206,7 @@ class App {
       if (pageId === 'transactions') window.transactionsModule.loadData();
       if (pageId === 'budgets') window.budgetsModule.loadData();
       if (pageId === 'investments') window.investmentsModule.loadData();
-      if (pageId === 'goals') window.goalsModule.loadData();
+      if (pageId === 'buckets') window.bucketsModule.loadData();
     }
     
     // Scroll to top
