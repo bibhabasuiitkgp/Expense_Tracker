@@ -167,30 +167,49 @@ exports.trend = async (req, res, next) => {
   }
 };
 
-// Helper: calculate logging streak
+// Helper: calculate logging streak (optimized with single aggregation query)
 async function calculateStreak(userId) {
-  const now = new Date();
-  let streak = 0;
-  let checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  try {
+    const dates = await Transaction.aggregate([
+      { $match: { userId } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        }
+      },
+      { $sort: { _id: -1 } }
+    ]);
 
-  // Check up to 365 days back
-  for (let i = 0; i < 365; i++) {
-    const dayStart = new Date(checkDate);
-    const dayEnd = new Date(checkDate);
-    dayEnd.setDate(dayEnd.getDate() + 1);
+    if (!dates || dates.length === 0) return 0;
 
-    const count = await Transaction.countDocuments({
-      userId,
-      createdAt: { $gte: dayStart, $lt: dayEnd }
-    });
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    if (count > 0) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      break;
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+    const latestDateStr = dates[0]._id;
+    if (latestDateStr !== todayStr && latestDateStr !== yesterdayStr) {
+      return 0;
     }
-  }
 
-  return streak;
+    const dateSet = new Set(dates.map(d => d._id));
+    let streak = 0;
+    let curr = new Date(latestDateStr);
+
+    while (true) {
+      const currStr = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`;
+      if (dateSet.has(currStr)) {
+        streak++;
+        curr.setDate(curr.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  } catch (e) {
+    return 0;
+  }
 }

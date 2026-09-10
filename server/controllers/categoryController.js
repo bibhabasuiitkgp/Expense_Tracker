@@ -1,3 +1,5 @@
+const Category = require('../models/Category');
+
 const DEFAULT_CATEGORIES = [
   { name: 'Food', icon: '🍔', color: '#f97316', keywords: ['lunch', 'dinner', 'breakfast', 'snack', 'restaurant', 'zomato', 'swiggy', 'food', 'meal', 'cafe', 'pizza', 'burger', 'biryani', 'thali', 'chai', 'coffee', 'tea'], monthlyBudget: 8000 },
   { name: 'Transport', icon: '🚗', color: '#3b82f6', keywords: ['uber', 'ola', 'auto', 'rickshaw', 'petrol', 'fuel', 'diesel', 'metro', 'bus', 'cab', 'taxi', 'train', 'parking', 'toll'], monthlyBudget: 3000 },
