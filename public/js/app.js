@@ -56,10 +56,21 @@ class App {
   async initializeApp() {
     this.isInitialized = true;
     try {
-      // Fetch common data
-      const res = await window.api.getCategories();
-      this.categories = res.categories || [];
+      // Fetch common data (categories & buckets)
+      const [catRes, bucketRes] = await Promise.all([
+        window.api.getCategories(),
+        window.api.getBuckets()
+      ]);
+      this.categories = catRes.categories || [];
       window.nlpParser.setCategories(this.categories);
+
+      if (window.bucketsModule) {
+        window.bucketsModule.buckets = bucketRes.buckets || [];
+      }
+      if (window.transactionsModule) {
+        window.transactionsModule.updateBucketOptions(bucketRes.buckets || []);
+        window.transactionsModule.renderCategoryDropdown();
+      }
 
       // Initialize all modules
       window.dashboardModule.init();

@@ -12,7 +12,7 @@ exports.getBuckets = async (req, res) => {
         { 
           $match: { 
             userId: new mongoose.Types.ObjectId(req.user.id),
-            bucket: bucket._id,
+            bucket: new mongoose.Types.ObjectId(bucket._id),
             type: 'expense'
           } 
         },

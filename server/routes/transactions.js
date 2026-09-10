@@ -11,6 +11,7 @@ const transactionSchema = Joi.object({
   type: Joi.string().valid('expense', 'income').required(),
   category: Joi.string().required(),
   subcategory: Joi.string().allow('').optional(),
+  bucket: Joi.string().allow(null, '').optional(),
   paymentMethod: Joi.string().valid('Cash', 'Credit Card', 'Debit Card', 'UPI', 'Net Banking').optional(),
   description: Joi.string().allow('').optional(),
   tags: Joi.array().items(Joi.string()).optional(),
@@ -23,6 +24,7 @@ const updateSchema = Joi.object({
   type: Joi.string().valid('expense', 'income').optional(),
   category: Joi.string().optional(),
   subcategory: Joi.string().allow('').optional(),
+  bucket: Joi.string().allow(null, '').optional(),
   paymentMethod: Joi.string().valid('Cash', 'Credit Card', 'Debit Card', 'UPI', 'Net Banking').optional(),
   description: Joi.string().allow('').optional(),
   tags: Joi.array().items(Joi.string()).optional()

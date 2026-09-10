@@ -1,11 +1,35 @@
 const Transaction = require('../models/Transaction');
+const Category = require('../models/Category');
 const { detectAnomaly } = require('../utils/anomalyDetection');
 const mongoose = require('mongoose');
+
+// Helper: Ensure category exists for user
+async function ensureCategoryExists(userId, categoryName) {
+  if (!categoryName) return;
+  const existing = await Category.findOne({ userId, name: categoryName.trim() });
+  if (!existing) {
+    await Category.create({
+      name: categoryName.trim(),
+      icon: '📌',
+      color: '#6366f1',
+      userId
+    });
+  }
+}
 
 // Create a new transaction
 exports.create = async (req, res, next) => {
   try {
     const data = { ...req.body, userId: req.user.id };
+
+    if (!data.bucket || data.bucket === '') {
+      data.bucket = null;
+    }
+
+    // Auto-create category if not existing
+    if (data.category) {
+      await ensureCategoryExists(req.user.id, data.category);
+    }
 
     // Run anomaly detection
     if (data.type === 'expense' && data.category && data.amount) {
@@ -16,7 +40,9 @@ exports.create = async (req, res, next) => {
     const transaction = new Transaction(data);
     await transaction.save();
 
-    res.status(201).json({ transaction });
+    const populated = await Transaction.findById(transaction._id).populate('bucket', 'name icon targetAmount').lean();
+
+    res.status(201).json({ transaction: populated || transaction });
   } catch (err) {
     next(err);
   }
@@ -27,7 +53,7 @@ exports.list = async (req, res, next) => {
   try {
     const {
       from, to, category, paymentMethod, q,
-      page = 1, limit = 20, type, tags
+      page = 1, limit = 20, type, tags, bucket
     } = req.query;
 
     const filter = { userId: req.user.id };
@@ -40,6 +66,7 @@ exports.list = async (req, res, next) => {
     if (category) filter.category = category;
     if (paymentMethod) filter.paymentMethod = paymentMethod;
     if (type) filter.type = type;
+    if (bucket) filter.bucket = bucket;
     if (tags) filter.tags = { $in: tags.split(',') };
     if (q) {
       filter.$or = [
@@ -53,6 +80,7 @@ exports.list = async (req, res, next) => {
 
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
+        .populate('bucket', 'name icon targetAmount')
         .sort({ date: -1, createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))

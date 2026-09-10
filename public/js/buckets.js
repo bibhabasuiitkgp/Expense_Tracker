@@ -8,9 +8,7 @@ class BucketsModule {
   }
 
   init() {
-    if (document.getElementById('page-buckets') && document.getElementById('page-buckets').classList.contains('active')) {
-      this.loadData();
-    }
+    this.loadData();
   }
 
   setupEventListeners() {

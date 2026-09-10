@@ -97,10 +97,11 @@ class TransactionsModule {
     if (catInput) {
       catInput.addEventListener('focus', () => {
         dropdown.classList.add('open');
-        this.filterCategoryDropdown('');
+        this.filterCategoryDropdown(catInput.value);
       });
       
       catInput.addEventListener('input', (e) => {
+        document.getElementById('txn-category').value = e.target.value;
         dropdown.classList.add('open');
         this.filterCategoryDropdown(e.target.value);
       });
@@ -115,7 +116,6 @@ class TransactionsModule {
 
     // Tags
     const tagsInput = document.getElementById('txn-tags-input');
-    const tagsDisplay = document.getElementById('txn-tags-display');
     this.currentTags = [];
 
     if (tagsInput) {
@@ -155,7 +155,7 @@ class TransactionsModule {
     if (!dropdown) return;
 
     dropdown.innerHTML = window.app.categories.map(c => `
-      <div class="dropdown__item" data-val="${c.name}" data-icon="${c.icon}" onclick="window.transactionsModule.selectCategory('${c.name}')">
+      <div class="dropdown__item" data-val="${c.name}" data-icon="${c.icon}" onclick="window.transactionsModule.selectCategory('${c.name.replace(/'/g, "\\'")}')">
         <span class="dropdown__item-icon">${c.icon}</span>
         <span>${c.name}</span>
         <div class="dropdown__item-color" style="background: ${c.color}; margin-left: auto;"></div>
@@ -164,22 +164,40 @@ class TransactionsModule {
   }
 
   filterCategoryDropdown(query) {
-    const items = document.querySelectorAll('#category-dropdown .dropdown__item');
-    query = query.toLowerCase();
+    const dropdown = document.getElementById('category-dropdown');
+    if (!dropdown) return;
+
+    const items = dropdown.querySelectorAll('.dropdown__item:not(.dropdown__item--create)');
+    query = (query || '').trim();
+    const queryLower = query.toLowerCase();
     
-    let hasMatch = false;
+    let exactMatch = false;
     items.forEach(item => {
-      const text = item.getAttribute('data-val').toLowerCase();
-      if (text.includes(query)) {
+      const val = item.getAttribute('data-val') || '';
+      const text = val.toLowerCase();
+      if (text === queryLower) exactMatch = true;
+
+      if (!query || text.includes(queryLower)) {
         item.style.display = 'flex';
-        hasMatch = true;
       } else {
         item.style.display = 'none';
       }
     });
-    
-    if (!hasMatch) {
-      // Optionally show a "Create category" option
+
+    // Remove existing custom create item if present
+    const existingCreate = dropdown.querySelector('.dropdown__item--create');
+    if (existingCreate) existingCreate.remove();
+
+    // If query typed and not exact match, add "+ Add category '[query]'" item
+    if (query && !exactMatch) {
+      const createEl = document.createElement('div');
+      createEl.className = 'dropdown__item dropdown__item--create';
+      createEl.style.cssText = 'color: var(--accent-primary); font-weight: var(--fw-medium); cursor: pointer; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--card-border); padding: 8px 12px;';
+      createEl.innerHTML = `<span>➕ Create category "${query}"</span>`;
+      createEl.onclick = () => {
+        this.selectCategory(query);
+      };
+      dropdown.appendChild(createEl);
     }
   }
 
@@ -188,11 +206,19 @@ class TransactionsModule {
     const hidden = document.getElementById('txn-category');
     const dropdown = document.getElementById('category-dropdown');
     
-    const cat = window.app.categories.find(c => c.name === name);
-    if (cat) {
-      input.value = cat.name;
-      hidden.value = cat.name;
-      dropdown.classList.remove('open');
+    if (input) input.value = name;
+    if (hidden) hidden.value = name;
+    if (dropdown) dropdown.classList.remove('open');
+
+    // If category is not in list yet, temporarily add it locally
+    const exists = window.app.categories.some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (!exists && name.trim()) {
+      window.app.categories.push({
+        name: name.trim(),
+        icon: '📌',
+        color: '#6366f1'
+      });
+      this.renderCategoryDropdown();
     }
   }
 
@@ -291,6 +317,15 @@ class TransactionsModule {
         desc += ` <span style="color: var(--accent-primary); opacity: 0.8;">#${t.tags[0]}</span>`;
       }
 
+      // Render Bucket Badge if transaction is linked to a bucket
+      let bucketBadge = '';
+      if (t.bucket) {
+        const b = typeof t.bucket === 'object' ? t.bucket : (window.bucketsModule ? window.bucketsModule.buckets.find(x => x._id === t.bucket) : null);
+        if (b) {
+          bucketBadge = `<span class="badge badge--info" style="font-size: var(--fs-xs); font-weight: normal; margin-left: 6px;">${b.icon || '🪣'} ${b.name}</span>`;
+        }
+      }
+
       html += `
         <div class="transaction-item" onclick="window.transactionsModule.editTransaction('${t._id}')" style="position: relative;">
           ${anomalyBadge}
@@ -298,7 +333,7 @@ class TransactionsModule {
             ${icon}
           </div>
           <div class="transaction-item__info">
-            <div class="transaction-item__category">${t.category}</div>
+            <div class="transaction-item__category">${t.category} ${bucketBadge}</div>
             <div class="transaction-item__desc">${desc || t.paymentMethod}</div>
           </div>
           <div class="transaction-item__amount transaction-item__amount--${t.type}">
@@ -316,8 +351,15 @@ class TransactionsModule {
     document.getElementById('txn-id').value = '';
     document.getElementById('transaction-form').reset();
     document.getElementById('txn-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('txn-category-input').value = '';
+    document.getElementById('txn-category').value = '';
     document.getElementById('transaction-modal-title').textContent = 'Add Transaction';
     
+    // Ensure bucket dropdown is populated with current buckets
+    if (window.bucketsModule && window.bucketsModule.buckets) {
+      this.updateBucketOptions(window.bucketsModule.buckets);
+    }
+
     this.currentTags = [];
     this.renderTags();
 
@@ -362,7 +404,8 @@ class TransactionsModule {
     document.getElementById('txn-description').value = t.description;
     this.selectCategory(t.category);
     
-    document.getElementById('txn-bucket').value = t.bucket || '';
+    const bucketId = (t.bucket && typeof t.bucket === 'object') ? t.bucket._id : (t.bucket || '');
+    document.getElementById('txn-bucket').value = bucketId;
     
     this.currentTags = [...(t.tags || [])];
     this.renderTags();
@@ -381,11 +424,13 @@ class TransactionsModule {
     const catInput = document.getElementById('txn-category-input').value;
     const bucket = document.getElementById('txn-bucket').value;
     
+    const categoryName = (catHidden || catInput || 'General').trim();
+
     const data = {
       date: document.getElementById('txn-date').value,
       amount: parseFloat(document.getElementById('txn-amount').value),
       type: document.getElementById('txn-type').value,
-      category: catHidden || catInput, // fallback if they just typed it
+      category: categoryName,
       bucket: bucket || null,
       paymentMethod: document.getElementById('txn-payment').value,
       description: document.getElementById('txn-description').value,
@@ -402,10 +447,14 @@ class TransactionsModule {
       }
       window.closeModal('transaction-modal');
       
-      // Reload current list
+      // Refresh categories from API to ensure newly added categories stay in sync
+      const catRes = await window.api.getCategories();
+      window.app.categories = catRes.categories || [];
+      this.renderCategoryDropdown();
+
+      // Reload current list & buckets data so spent progress updates instantly
       this.loadData(true);
-      
-      // Background reload dashboard if needed
+      if (window.bucketsModule) window.bucketsModule.loadData();
       window.dashboardModule.loadData();
     } catch (err) {
       window.app.showToast(err.message, 'danger');
@@ -418,37 +467,35 @@ class TransactionsModule {
     const id = document.getElementById('txn-id').value;
     if (!id) return;
     
-    // Store data for optimistic undo
     const t = this.transactions.find(x => x._id === id);
     if (!t) return;
 
     if (!confirm('Delete this transaction?')) return;
 
     try {
-      // Optimistic remove from UI
       this.transactions = this.transactions.filter(x => x._id !== id);
       this.renderList();
       window.closeModal('transaction-modal');
 
       await window.api.deleteTransaction(id);
+      if (window.bucketsModule) window.bucketsModule.loadData();
       
-      // Show undo toast
       window.app.showToast('Transaction deleted', 'info', {
         label: 'Undo',
         onClick: async () => {
-          // Recreate it (minus id)
           const data = { ...t };
           delete data._id;
           delete data.createdAt;
           delete data.updatedAt;
           await window.api.createTransaction(data);
           this.loadData(true);
+          if (window.bucketsModule) window.bucketsModule.loadData();
         }
       });
       
     } catch (err) {
       window.app.showToast(err.message, 'danger');
-      this.loadData(true); // reload to fix UI state
+      this.loadData(true);
     }
   }
 
@@ -456,9 +503,12 @@ class TransactionsModule {
     const select = document.getElementById('txn-bucket');
     if (!select) return;
     
-    select.innerHTML = '<option value="">None</option>' + buckets.map(b => 
-      `<option value="${b._id}">${b.icon} ${b.name}</option>`
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">None</option>' + (buckets || []).map(b => 
+      `<option value="${b._id}">${b.icon || '🪣'} ${b.name}</option>`
     ).join('');
+    
+    select.value = currentValue;
   }
 }
 
