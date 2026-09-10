@@ -27,7 +27,8 @@ exports.summary = async (req, res, next) => {
       anomalies,
       forecast,
       streak,
-      incomeThisMonth
+      incomeThisMonth,
+      investmentsThisMonth
     ] = await Promise.all([
       // Total spend this month
       Transaction.aggregate([
@@ -79,6 +80,12 @@ exports.summary = async (req, res, next) => {
       Transaction.aggregate([
         { $match: { userId, type: 'income', date: { $gte: startDate, $lt: endDate } } },
         { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+
+      // Investment Outflow this month
+      Transaction.aggregate([
+        { $match: { userId, type: 'expense', category: 'Investment', date: { $gte: startDate, $lt: endDate } } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
       ])
     ]);
 
@@ -86,6 +93,7 @@ exports.summary = async (req, res, next) => {
     const previousTotal = previousMonth.length ? previousMonth[0].total : 0;
     const transactionCount = currentMonth.length ? currentMonth[0].count : 0;
     const incomeTotal = incomeThisMonth.length ? incomeThisMonth[0].total : 0;
+    const investmentOutflow = investmentsThisMonth.length ? investmentsThisMonth[0].total : 0;
 
     const percentChange = previousTotal > 0
       ? Math.round(((currentTotal - previousTotal) / previousTotal) * 1000) / 10
@@ -99,6 +107,7 @@ exports.summary = async (req, res, next) => {
       transactionCount,
       totalIncome: Math.round(incomeTotal),
       netSavings: Math.round(incomeTotal - currentTotal),
+      investmentOutflow: Math.round(investmentOutflow),
       categoryBreakdown,
       dailySpend,
       anomalies,

@@ -70,6 +70,11 @@ class DashboardModule {
     document.getElementById('stat-savings').textContent = window.app.formatCurrency(data.netSavings);
     document.getElementById('stat-count').textContent = data.transactionCount;
     
+    const invOutflowEl = document.getElementById('stat-investment-outflow');
+    if (invOutflowEl) {
+      invOutflowEl.textContent = window.app.formatCurrency(data.investmentOutflow || 0);
+    }
+    
     const changeEl = document.getElementById('stat-change');
     if (data.percentChange !== 0) {
       const isUp = data.percentChange > 0;

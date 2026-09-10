@@ -42,6 +42,7 @@ async function seed() {
       { name: 'Health', icon: '🏥', color: '#10b981', keywords: ['medicine', 'doctor', 'hospital', 'pharmacy', 'gym', 'fitness', 'medical', 'health', 'lab', 'test', 'consultation'], monthlyBudget: 2000 },
       { name: 'Education', icon: '📚', color: '#6366f1', keywords: ['course', 'udemy', 'book', 'tuition', 'coaching', 'class', 'learning', 'exam', 'certification'], monthlyBudget: 3000 },
       { name: 'Subscriptions', icon: '📱', color: '#a855f7', keywords: ['subscription', 'plan', 'membership', 'premium'], monthlyBudget: 1500 },
+      { name: 'Investment', icon: '📈', color: '#10b981', keywords: ['investment', 'sip', 'mutual fund', 'stocks', 'emergency fund', 'fd', 'ppf'], monthlyBudget: null },
       { name: 'Salary', icon: '💰', color: '#22c55e', keywords: ['salary', 'income', 'pay', 'bonus', 'stipend', 'freelance'], monthlyBudget: null }
     ];
 

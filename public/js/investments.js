@@ -19,6 +19,45 @@ class InvestmentsModule {
 
     const form = document.getElementById('investment-form');
     if (form) form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+    const typeSelect = document.getElementById('inv-type');
+    if (typeSelect) {
+      typeSelect.addEventListener('change', () => this.handleTypeChange());
+    }
+
+    const contribForm = document.getElementById('contribution-form');
+    if (contribForm) {
+      contribForm.addEventListener('submit', (e) => this.handleContributionSubmit(e));
+    }
+  }
+
+  handleTypeChange() {
+    const type = document.getElementById('inv-type').value;
+    const unitsGroup = document.getElementById('inv-units-group');
+    const navRow = document.getElementById('inv-nav-row');
+    const targetGroup = document.getElementById('inv-target-group');
+    const amountLabel = document.getElementById('inv-amount-label');
+
+    const unitsInput = document.getElementById('inv-units');
+    const navPurchaseInput = document.getElementById('inv-nav-purchase');
+
+    if (type === 'emergency_fund') {
+      if (unitsGroup) unitsGroup.classList.add('hidden');
+      if (navRow) navRow.classList.add('hidden');
+      if (targetGroup) targetGroup.classList.remove('hidden');
+      if (amountLabel) amountLabel.textContent = 'Initial Deposit (₹)';
+
+      if (unitsInput) unitsInput.removeAttribute('required');
+      if (navPurchaseInput) navPurchaseInput.removeAttribute('required');
+    } else {
+      if (unitsGroup) unitsGroup.classList.remove('hidden');
+      if (navRow) navRow.classList.remove('hidden');
+      if (targetGroup) targetGroup.classList.add('hidden');
+      if (amountLabel) amountLabel.textContent = 'Amount Invested (₹)';
+
+      if (unitsInput) unitsInput.setAttribute('required', 'true');
+      if (navPurchaseInput) navPurchaseInput.setAttribute('required', 'true');
+    }
   }
 
   async loadData() {
@@ -52,6 +91,29 @@ class InvestmentsModule {
     const isGain = data.totalGainLoss >= 0;
     gainEl.textContent = `${isGain ? '+' : '-'}${window.app.formatCurrency(Math.abs(data.totalGainLoss))}`;
     gainEl.className = `stat-card__value ${isGain ? 'gain-positive' : 'gain-negative'}`;
+
+    // Emergency Fund Card
+    const efCard = document.getElementById('emergency-fund-card');
+    if (data.emergencyFund && data.emergencyFund.total > 0) {
+      if (efCard) efCard.classList.remove('hidden');
+      document.getElementById('ef-total-val').textContent = window.app.formatCurrency(data.emergencyFund.total);
+      
+      const targetVal = document.getElementById('ef-target-val');
+      const progressText = document.getElementById('ef-progress-text');
+      const progressBar = document.getElementById('ef-progress-bar');
+      
+      if (data.emergencyFund.target > 0) {
+        targetVal.textContent = `Target: ${window.app.formatCurrency(data.emergencyFund.target)}`;
+        progressText.textContent = `${data.emergencyFund.progress}% of target saved`;
+        progressBar.style.width = `${Math.min(data.emergencyFund.progress, 100)}%`;
+      } else {
+        targetVal.textContent = 'No target set';
+        progressText.textContent = 'Emergency fund active';
+        progressBar.style.width = '100%';
+      }
+    } else if (efCard) {
+      efCard.classList.add('hidden');
+    }
   }
 
   renderTable(funds) {
@@ -64,19 +126,35 @@ class InvestmentsModule {
     }
 
     tbody.innerHTML = funds.map(f => {
+      const isEmergency = f.type === 'emergency_fund';
       const isGain = f.gainLoss >= 0;
+      const badgeClass = isEmergency ? 'badge--success' : (f.type === 'SIP' ? 'badge--info' : 'badge--warning');
+      const typeLabel = isEmergency ? 'Emergency Fund' : f.type;
+
       return `
-        <tr style="cursor: pointer;" onclick="window.investmentsModule.editInvestment('${f._id}')">
-          <td style="font-weight: var(--fw-medium);">${f.fundName}</td>
-          <td><span class="badge badge--info">${f.type}</span></td>
+        <tr>
+          <td style="font-weight: var(--fw-medium);" onclick="window.investmentsModule.editInvestment('${f._id}')" style="cursor: pointer;">
+            ${f.fundName}
+          </td>
+          <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
           <td>${window.app.formatCurrency(f.amountInvested)}</td>
           <td>${window.app.formatCurrency(f.currentValue)}</td>
           <td class="${isGain ? 'gain-positive' : 'gain-negative'}">
-            ${isGain ? '+' : ''}${window.app.formatCurrency(f.gainLoss)}<br>
-            <span style="font-size: 0.85em;">(${isGain ? '+' : ''}${f.gainLossPercent}%)</span>
+            ${isEmergency ? '—' : `${isGain ? '+' : ''}${window.app.formatCurrency(f.gainLoss)}<br><span style="font-size: 0.85em;">(${isGain ? '+' : ''}${f.gainLossPercent}%)</span>`}
           </td>
-          <td style="color: ${f.xirr >= 0 ? 'var(--success)' : 'var(--danger)'};">${f.xirr}%</td>
-          <td class="text-right text-tertiary">›</td>
+          <td style="color: ${f.xirr >= 0 ? 'var(--success)' : 'var(--danger)'};">${isEmergency ? '—' : `${f.xirr}%`}</td>
+          <td class="text-right">
+            <div style="display: flex; gap: var(--sp-2); justify-content: flex-end;">
+              ${(f.type === 'emergency_fund' || f.type === 'SIP') ? `
+                <button class="btn btn--secondary btn--xs" onclick="event.stopPropagation(); window.investmentsModule.openContributionModal('${f._id}')" title="Add Monthly Contribution">
+                  + Deposit
+                </button>
+              ` : ''}
+              <button class="btn btn--ghost btn--xs" onclick="event.stopPropagation(); window.investmentsModule.editInvestment('${f._id}')">
+                ✏️
+              </button>
+            </div>
+          </td>
         </tr>
       `;
     }).join('');
@@ -88,7 +166,11 @@ class InvestmentsModule {
     document.getElementById('inv-purchase-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('investment-modal-title').textContent = 'Add Investment';
     
-    // Add delete button if missing
+    // Set default type to SIP and trigger field state reset
+    document.getElementById('inv-type').value = 'SIP';
+    this.handleTypeChange();
+
+    // Delete button
     let delBtn = document.getElementById('inv-delete-btn');
     if (!delBtn) {
       delBtn = document.createElement('button');
@@ -113,11 +195,20 @@ class InvestmentsModule {
     document.getElementById('inv-id').value = inv._id;
     document.getElementById('inv-fund-name').value = inv.fundName;
     document.getElementById('inv-type').value = inv.type;
+    this.handleTypeChange();
+
     document.getElementById('inv-folio').value = inv.folioNumber || '';
     document.getElementById('inv-amount').value = inv.amountInvested;
-    document.getElementById('inv-units').value = inv.units;
-    document.getElementById('inv-nav-purchase').value = inv.NAVatPurchase;
-    if (inv.currentNAV) document.getElementById('inv-nav-current').value = inv.currentNAV;
+
+    if (inv.type === 'emergency_fund') {
+      const targetInput = document.getElementById('inv-target');
+      if (targetInput) targetInput.value = inv.targetAmount || '';
+    } else {
+      document.getElementById('inv-units').value = inv.units || '';
+      document.getElementById('inv-nav-purchase').value = inv.NAVatPurchase || '';
+      if (inv.currentNAV) document.getElementById('inv-nav-current').value = inv.currentNAV;
+    }
+
     document.getElementById('inv-purchase-date').value = new Date(inv.purchaseDate).toISOString().split('T')[0];
     
     const delBtn = document.getElementById('inv-delete-btn');
@@ -130,18 +221,27 @@ class InvestmentsModule {
     btn.disabled = true;
     
     const id = document.getElementById('inv-id').value;
+    const type = document.getElementById('inv-type').value;
     const currentNavStr = document.getElementById('inv-nav-current').value;
+    const targetStr = document.getElementById('inv-target').value;
     
     const data = {
       fundName: document.getElementById('inv-fund-name').value,
-      type: document.getElementById('inv-type').value,
+      type,
       folioNumber: document.getElementById('inv-folio').value,
       amountInvested: parseFloat(document.getElementById('inv-amount').value),
-      units: parseFloat(document.getElementById('inv-units').value),
-      NAVatPurchase: parseFloat(document.getElementById('inv-nav-purchase').value),
-      purchaseDate: document.getElementById('inv-purchase-date').value,
-      currentNAV: currentNavStr ? parseFloat(currentNavStr) : null
+      purchaseDate: document.getElementById('inv-purchase-date').value
     };
+
+    if (type === 'emergency_fund') {
+      data.targetAmount = targetStr ? parseFloat(targetStr) : null;
+      data.units = null;
+      data.NAVatPurchase = null;
+    } else {
+      data.units = parseFloat(document.getElementById('inv-units').value);
+      data.NAVatPurchase = parseFloat(document.getElementById('inv-nav-purchase').value);
+      data.currentNAV = currentNavStr ? parseFloat(currentNavStr) : null;
+    }
 
     try {
       if (id) {
@@ -149,9 +249,44 @@ class InvestmentsModule {
         window.app.showToast('Investment updated', 'success');
       } else {
         await window.api.createInvestment(data);
-        window.app.showToast('Investment added', 'success');
+        window.app.showToast('Investment added (Expense transaction auto-created)', 'success');
       }
       window.closeModal('investment-modal');
+      this.loadData();
+    } catch (err) {
+      window.app.showToast(err.message, 'danger');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  openContributionModal(id) {
+    const inv = this.investments.find(x => x._id === id);
+    if (!inv) return;
+
+    document.getElementById('contrib-inv-id').value = inv._id;
+    document.getElementById('contribution-fund-name').textContent = `${inv.type === 'emergency_fund' ? 'Emergency Fund' : 'SIP'}: ${inv.fundName}`;
+    document.getElementById('contrib-amount').value = '';
+    document.getElementById('contrib-note').value = '';
+    document.getElementById('contrib-date').value = new Date().toISOString().split('T')[0];
+
+    window.openModal('contribution-modal');
+  }
+
+  async handleContributionSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('contrib-submit-btn');
+    btn.disabled = true;
+
+    const invId = document.getElementById('contrib-inv-id').value;
+    const amount = parseFloat(document.getElementById('contrib-amount').value);
+    const date = document.getElementById('contrib-date').value;
+    const note = document.getElementById('contrib-note').value;
+
+    try {
+      await window.api.addContribution(invId, { amount, date, note });
+      window.app.showToast('Contribution recorded (Expense transaction auto-created)', 'success');
+      window.closeModal('contribution-modal');
       this.loadData();
     } catch (err) {
       window.app.showToast(err.message, 'danger');
@@ -164,11 +299,11 @@ class InvestmentsModule {
     const id = document.getElementById('inv-id').value;
     if (!id) return;
     
-    if (!confirm('Delete this investment? This affects your portfolio XIRR.')) return;
+    if (!confirm('Delete this investment? Linked expense transactions will also be removed.')) return;
 
     try {
       await window.api.deleteInvestment(id);
-      window.app.showToast('Investment deleted', 'success');
+      window.app.showToast('Investment & linked transactions deleted', 'success');
       window.closeModal('investment-modal');
       this.loadData();
     } catch (err) {

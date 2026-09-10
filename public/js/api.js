@@ -170,6 +170,17 @@ class ApiService {
     });
   }
 
+  async addContribution(id, data) {
+    return this.request(`/investments/${id}/contribute`, {
+      method: 'POST',
+      body: data
+    });
+  }
+
+  async getContributions(id) {
+    return this.request(`/investments/${id}/contributions`);
+  }
+
   // --- Buckets ---
   async getBuckets() {
     return this.request('/buckets');
