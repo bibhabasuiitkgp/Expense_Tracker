@@ -131,18 +131,6 @@ class ApiService {
     });
   }
 
-  // --- Budgets ---
-  async getBudgets(month) {
-    return this.request(`/budgets?month=${month}`);
-  }
-
-  async setBudget(data) {
-    return this.request('/budgets', {
-      method: 'POST',
-      body: data
-    });
-  }
-
   // --- Dashboard ---
   async getDashboardSummary(month) {
     const query = month ? `?month=${month}` : '';

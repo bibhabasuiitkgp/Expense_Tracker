@@ -15,7 +15,6 @@ class App {
     this.sections = {
       dashboard: document.getElementById('page-dashboard'),
       transactions: document.getElementById('page-transactions'),
-      budgets: document.getElementById('page-budgets'),
       investments: document.getElementById('page-investments'),
       buckets: document.getElementById('page-buckets')
     };
@@ -65,7 +64,6 @@ class App {
       // Initialize all modules
       window.dashboardModule.init();
       window.transactionsModule.init();
-      window.budgetsModule.init();
       window.investmentsModule.init();
       window.bucketsModule.init();
 
@@ -204,7 +202,6 @@ class App {
       // Trigger load data for specific pages
       if (pageId === 'dashboard') window.dashboardModule.loadData();
       if (pageId === 'transactions') window.transactionsModule.loadData();
-      if (pageId === 'budgets') window.budgetsModule.loadData();
       if (pageId === 'investments') window.investmentsModule.loadData();
       if (pageId === 'buckets') window.bucketsModule.loadData();
     }

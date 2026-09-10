@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 const Category = require('./models/Category');
 const Transaction = require('./models/Transaction');
-const Budget = require('./models/Budget');
 const Investment = require('./models/Investment');
 const Bucket = require('./models/Bucket');
 
@@ -18,7 +17,6 @@ async function seed() {
       User.deleteMany({}),
       Category.deleteMany({}),
       Transaction.deleteMany({}),
-      Budget.deleteMany({}),
       Investment.deleteMany({}),
       Bucket.deleteMany({})
     ]);
@@ -140,20 +138,6 @@ async function seed() {
 
     await Transaction.insertMany(transactions);
     console.log(`💳 Created ${transactions.length} sample transactions`);
-
-    // Create budgets for current month
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const budgets = categoriesData
-      .filter(c => c.monthlyBudget)
-      .map(c => ({
-        category: c.name,
-        month: currentMonth,
-        limit: c.monthlyBudget,
-        userId: user._id
-      }));
-
-    await Budget.insertMany(budgets);
-    console.log(`📊 Created ${budgets.length} budgets for ${currentMonth}`);
 
     // Create sample investments
     const investments = [

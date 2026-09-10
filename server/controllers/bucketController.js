@@ -4,14 +4,14 @@ const mongoose = require('mongoose');
 
 exports.getBuckets = async (req, res) => {
   try {
-    const buckets = await Bucket.find({ user: req.user.userId }).lean();
+    const buckets = await Bucket.find({ user: req.user.id }).lean();
     
     // Calculate spent amount for each bucket directly from transactions
     const populatedBuckets = await Promise.all(buckets.map(async (bucket) => {
       const result = await Transaction.aggregate([
         { 
           $match: { 
-            user: new mongoose.Types.ObjectId(req.user.userId),
+            userId: new mongoose.Types.ObjectId(req.user.id),
             bucket: bucket._id,
             type: 'expense'
           } 
@@ -46,7 +46,7 @@ exports.createBucket = async (req, res) => {
   try {
     const { name, targetAmount, icon } = req.body;
     const bucket = new Bucket({
-      user: req.user.userId,
+      user: req.user.id,
       name,
       targetAmount,
       icon: icon || '🪣'
@@ -66,7 +66,7 @@ exports.updateBucket = async (req, res) => {
   try {
     const { name, targetAmount, icon } = req.body;
     const bucket = await Bucket.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.userId },
+      { _id: req.params.id, user: req.user.id },
       { name, targetAmount, icon },
       { new: true, runValidators: true }
     );
@@ -86,14 +86,14 @@ exports.updateBucket = async (req, res) => {
 
 exports.deleteBucket = async (req, res) => {
   try {
-    const bucket = await Bucket.findOneAndDelete({ _id: req.params.id, user: req.user.userId });
+    const bucket = await Bucket.findOneAndDelete({ _id: req.params.id, user: req.user.id });
     if (!bucket) {
       return res.status(404).json({ error: 'Bucket not found' });
     }
     
     // Optionally remove bucket reference from transactions
     await Transaction.updateMany(
-      { user: req.user.userId, bucket: bucket._id },
+      { userId: req.user.id, bucket: bucket._id },
       { $unset: { bucket: 1 } }
     );
     

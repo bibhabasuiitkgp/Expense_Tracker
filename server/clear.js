@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 const Category = require('./models/Category');
 const Transaction = require('./models/Transaction');
-const Budget = require('./models/Budget');
 const Investment = require('./models/Investment');
 const Bucket = require('./models/Bucket');
 
@@ -25,7 +24,6 @@ async function clearDB() {
           User.deleteMany({}),
           Category.deleteMany({}),
           Transaction.deleteMany({}),
-          Budget.deleteMany({}),
           Investment.deleteMany({}),
           Bucket.deleteMany({})
         ]);
