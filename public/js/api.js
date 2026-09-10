@@ -131,6 +131,19 @@ class ApiService {
     });
   }
 
+  async updateCategory(id, data) {
+    return this.request(`/categories/${id}`, {
+      method: 'PUT',
+      body: data
+    });
+  }
+
+  async deleteCategory(id) {
+    return this.request(`/categories/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
   // --- Dashboard ---
   async getDashboardSummary(month) {
     const query = month ? `?month=${month}` : '';

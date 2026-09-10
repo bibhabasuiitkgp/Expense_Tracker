@@ -192,7 +192,10 @@
       <section id="page-transactions" class="page-section">
         <div class="section-header">
           <h1 class="section-title">Transactions</h1>
-          <button class="btn btn--primary btn--sm" id="add-transaction-btn">+ Add</button>
+          <div style="display: flex; gap: var(--sp-2);">
+            <button class="btn btn--secondary btn--sm" id="manage-categories-btn">📂 Categories</button>
+            <button class="btn btn--primary btn--sm" id="add-transaction-btn">+ Add</button>
+          </div>
         </div>
 
         <!-- NLP Quick Entry -->
@@ -369,7 +372,10 @@
         </div>
 
         <div class="form-group">
-          <label for="txn-category-input" class="form-label">Category</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-1);">
+            <label for="txn-category-input" class="form-label" style="margin-bottom: 0;">Category</label>
+            <a href="#" id="txn-manage-cat-btn" style="font-size: var(--fs-xs); color: var(--accent-primary); text-decoration: none;">⚙️ Manage Categories</a>
+          </div>
           <div class="dropdown">
             <input type="text" id="txn-category-input" class="form-input" placeholder="Search category..." required autocomplete="off">
             <input type="hidden" id="txn-category">
@@ -538,6 +544,60 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CATEGORY MANAGEMENT MODAL                  -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="category-modal">
+    <div class="modal" style="max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal__handle"></div>
+      <h2 class="modal__title">Manage Categories</h2>
+      
+      <div style="overflow-y: auto; padding-right: 4px;">
+        <!-- Create / Edit Form Card -->
+        <div class="card mb-4" style="background: var(--bg-tertiary); border: 1px solid var(--card-border);">
+          <div style="font-weight: var(--fw-semibold); font-size: var(--fs-sm); margin-bottom: var(--sp-3);" id="cat-form-title">
+            Create New Category
+          </div>
+          <form id="category-system-form">
+            <input type="hidden" id="cat-id">
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label for="cat-name" class="form-label">Category Name</label>
+                <input type="text" id="cat-name" class="form-input" placeholder="e.g. Groceries" required>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="cat-icon" class="form-label">Emoji Icon</label>
+                <input type="text" id="cat-icon" class="form-input" placeholder="🛒" maxlength="2" value="📦">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 1;">
+                <label for="cat-color" class="form-label">Color</label>
+                <input type="color" id="cat-color" class="form-input" value="#6366f1" style="height: 42px; padding: 4px; cursor: pointer;">
+              </div>
+              <div class="form-group" style="flex: 2;">
+                <label for="cat-budget" class="form-label">Monthly Budget (₹)</label>
+                <input type="number" id="cat-budget" class="form-input" placeholder="Optional limit" min="1" inputmode="numeric">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: var(--sp-2);">
+              <button type="submit" class="btn btn--primary btn--full" id="cat-submit-btn">Save Category</button>
+              <button type="button" class="btn btn--secondary hidden" id="cat-cancel-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Existing Categories List Panel -->
+        <div style="font-weight: var(--fw-semibold); font-size: var(--fs-sm); margin-bottom: var(--sp-2);">
+          Your Categories
+        </div>
+        <div id="categories-manage-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -549,6 +609,7 @@
   <script src="/js/transactions.js"></script>
   <script src="/js/investments.js"></script>
   <script src="/js/buckets.js"></script>
+  <script src="/js/categories.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

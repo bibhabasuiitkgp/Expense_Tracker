@@ -77,6 +77,7 @@ class App {
       window.transactionsModule.init();
       window.investmentsModule.init();
       window.bucketsModule.init();
+      if (window.categoriesModule) window.categoriesModule.init();
 
     } catch (e) {
       this.showToast('Failed to load initial data', 'danger');
